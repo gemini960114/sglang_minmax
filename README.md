@@ -1,10 +1,11 @@
 # HPC MiniMax-M2.5 Serving with SGLang
 
-此專案專注於在高效能運算 (HPC) 環境（如 NVIDIA H200 叢集）中，利用 **SGLang** 部署與執行 **MiniMax-M2.5** 模型的完整解決方案。
+此專案專注於在高效能運算 (HPC) 環境（如 NVIDIA H100 叢集）中，利用 **SGLang** 部署與執行 **MiniMax-M2.5** 模型的完整解決方案。
 
 ## 🚀 核心特點
 - **MiniMax-M2.5 深度優化**：針對 MiniMax 特有的 MLA 架構與 Tool Call/Reasoning 功能，配置了專用的解析器 (`minimax-m2` & `minimax-append-think`)。
-- **高效能產出**：在 H200 (TP=4) 環境下，單併發生成速度可達 **125 tokens/s** 以上。
+- **高效能產出**：在 H100 (TP=4) 環境下，單併發生成速度可達 **125 tokens/s** 以上。
+
 - **HPC 環境適配**：自動處理 `glibc` 相容性、CUDA 路徑對齊以及 Triton 編譯器衝突（強制使用 GCC 12.5.0）。
 
 ---
