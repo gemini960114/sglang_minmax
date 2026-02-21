@@ -11,8 +11,9 @@
 # 建立日誌目錄
 mkdir -p logs
 
-# 載入必要的環境模組 (雖然 Singularity 內部有環境，但主機端載入以確保路徑正確)
+# 載入必要的環境模組
 module load nvhpc-hpcx-cuda12/24.7
+export CC=gcc
 
 # 切換到專案目錄
 cd /work/$USER/antigravity/vllm

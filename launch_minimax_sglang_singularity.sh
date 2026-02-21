@@ -15,6 +15,7 @@ CACHE_DIR="/work/$USER/huggingface_cache"
 export HF_HOME="$CACHE_DIR"
 export SAFETENSORS_FAST_GPU=1
 export OMP_NUM_THREADS=1
+export CC=gcc
 
 # 2. 檢查 GPU 資源
 echo "[2/3] 檢查 GPU 資源..."
