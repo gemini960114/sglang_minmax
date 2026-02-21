@@ -43,7 +43,14 @@ singularity pull /work/$USER/docker/sglang_latest.sif docker://lmsysorg/sglang:l
 ```bash
 bash launch_minimax_sglang_singularity.sh
 ```
-*   **特性**: 解決主機環境庫版本衝突，適合各種 HPC 節點。
+
+### 3. 使用 Slurm 提交任務 (推薦背景執行)
+若需要在叢集節點背景執行服務，請使用 Slurm 腳本：
+```bash
+sbatch launch_minimax.slurm
+```
+*   **特性**: 自動分配 4 張 GPU，解決主機環境庫版本衝突，適合長時間運行服務。
+
 
 ---
 
