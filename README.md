@@ -46,10 +46,10 @@ bash launch_minimax_sglang_singularity.sh
 
 ### 3. 使用 Slurm 提交任務 (推薦背景執行)
 若需要在叢集節點背景執行服務，請使用 Slurm 腳本：
-```bash
-sbatch launch_minimax.slurm
-```
-*   **特性**: 自動分配 4 張 GPU，解決主機環境庫版本衝突，適合長時間運行服務。
+- **標準版**: `sbatch launch_minimax.slurm`
+- **高併發/多人優化版**: `sbatch launch_minimax_multi.slurm`
+
+*   **特性**: 自動分配 4 張 GPU，解決主機環境庫版本衝突，適合長時間運行服務。多人優化版額外啟用了 `LPM` 排程與 `Chunked Prefill` 以降低集體等待時間。
 
 
 ---
