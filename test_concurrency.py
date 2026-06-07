@@ -3,6 +3,7 @@ import aiohttp
 import time
 import statistics
 import argparse
+import os
 
 # ==============================================================================
 # SGLang 多併發壓力測試工具 (Concurrent Benchmark)
@@ -10,9 +11,10 @@ import argparse
 #   python test_concurrency.py --users 50
 #   python test_concurrency.py --users 100 --max-tokens 1024
 #   python test_concurrency.py --ramp              # 自動階梯: 10→50→100→200→500
+#   python test_concurrency.py --host 25a-hgpn004  # 指定計算節點
+#   SGLANG_HOST=25a-hgpn004 python test_concurrency.py  # 環境變數
 # ==============================================================================
 
-API_URL   = "http://localhost:8000/v1/chat/completions"
 MODEL_ID  = "MiniMaxAI/MiniMax-M2.7"
 PROMPT    = "請用繁體中文寫一篇關於人工智慧未來發展的五百字文章。"
 
@@ -100,6 +102,11 @@ async def run_stage(users, max_tokens, timeout):
 
 async def main():
     parser = argparse.ArgumentParser(description="SGLang 併發壓力測試")
+    parser.add_argument("--host",       type=str,
+                        default=os.environ.get("SGLANG_HOST", "localhost"),
+                        help="SGLang 伺服器主機名/IP（預設 localhost，可用環境變數 SGLANG_HOST）")
+    parser.add_argument("--port",       type=int, default=8000,
+                        help="SGLang 服務 port（預設 8000）")
     parser.add_argument("--users",      type=int, default=10,
                         help="同時模擬使用者數 (預設 10)")
     parser.add_argument("--max-tokens", type=int, default=512,
@@ -113,6 +120,11 @@ async def main():
     parser.add_argument("--ramp-max",   type=int, default=None,
                         help="自動產生階梯至最大人數，例如: --ramp-max 2000")
     args = parser.parse_args()
+
+    # 動態組合 API_URL
+    global API_URL
+    API_URL = f"http://{args.host}:{args.port}/v1/chat/completions"
+    print(f"🔗 連線目標：{API_URL}")
 
     # 決定測試階梯
     if args.ramp_steps:

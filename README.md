@@ -91,20 +91,34 @@ python test_inference.py
 
 > **注意**：MiniMax-M2.7 啟動時包含 **DeepGEMM kernel warmup**（首次啟動需額外約 5~10 分鐘），完成後 API 才可用。
 
-### 快速推論測試
+### 推論測試 (`test_inference.py`)
 
 ```bash
 source .venv/bin/activate
 
-# 預設測試（自動等待伺服器就緒）
+# 在計算節點上執行（localhost 自動有效）
+python test_inference.py
+
+# 從登入節點指定計算節點名稱
+python test_inference.py --host 25a-hgpn004
+
+# 用環境變數（設一次，之後都有效）
+export SGLANG_HOST=25a-hgpn004
 python test_inference.py
 
 # 指定 port 與模型
-python test_inference.py --port 8000 --model MiniMaxAI/MiniMax-M2.7
+python test_inference.py --host 25a-hgpn004 --port 8000 --model MiniMaxAI/MiniMax-M2.7
 
 # 跳過等待直接測試
 python test_inference.py --no-wait
 ```
+
+| 參數 | 預設值 | 說明 |
+|------|--------|------|
+| `--host` | `localhost`（可用 `SGLANG_HOST` 環境變數覆蓋）| 伺服器主機名或 IP |
+| `--port` | `8000` | 服務 port |
+| `--model` | `MiniMaxAI/MiniMax-M2.7` | 模型名稱 |
+| `--no-wait` | — | 跳過健康等待，直接測試 |
 
 ---
 
@@ -139,26 +153,41 @@ python test_inference.py --no-wait
 - **吞吐量峰值**：**13,000~15,000 tok/s**（預估）
 - **拐點**：400→500 人時，邊際增益從 +3,031 tok/s 降至 +1,105 tok/s，為系統飽和訊號
 
-### 壓力測試指令
+### 壓力測試 (`test_concurrency.py`)
 
 ```bash
 source .venv/bin/activate
 
-# 單次測試指定人數
+# 在計算節點上執行（localhost 自動有效）
 python test_concurrency.py --users 100
 
-# 預設階梯測試（10→50→100→200→500→1000→2000）
+# 從登入節點指定計算節點
+python test_concurrency.py --host 25a-hgpn004 --users 100
+
+# 用環境變數
+export SGLANG_HOST=25a-hgpn004
 python test_concurrency.py --ramp
 
-# 自定義階梯
+# 自定義階梯步驟
 python test_concurrency.py --ramp-steps 100 200 300 400 500
 
-# 自動產生至最大值（每 500 一梯）
+# 自動產生到最大值（每 500 一梯）
 python test_concurrency.py --ramp-max 2000
 
 # 調整 max_tokens 與 timeout
 python test_concurrency.py --users 200 --max-tokens 1024 --timeout 600
 ```
+
+| 參數 | 預設值 | 說明 |
+|------|--------|------|
+| `--host` | `localhost`（可用 `SGLANG_HOST` 環境變數覆蓋）| 伺服器主機名或 IP |
+| `--port` | `8000` | 服務 port |
+| `--users` | `10` | 同時模擬使用者數 |
+| `--ramp` | — | 階梯測試：10→50→100→200→500→1000→2000 |
+| `--ramp-steps` | — | 自定義階梯，例如 `--ramp-steps 100 300 500` |
+| `--ramp-max` | — | 自動產生到最大人數 |
+| `--max-tokens` | `512` | 每次請求最大 token 數 |
+| `--timeout` | `300` | 單次請求 timeout 秒數 |
 
 ---
 
