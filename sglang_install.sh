@@ -3,20 +3,23 @@
 # 設定錯誤時停止執行
 set -e
 
+# 將 uv 的安裝路徑加入 PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # 1. 定義路徑
-WORK_DIR="/work/$USER/antigravity/vllm"
+WORK_DIR="/work/$USER/model/sglang_minmax"
 CACHE_DIR="/work/$USER/huggingface_cache"
 VENV_PATH="$WORK_DIR/.venv"
 
 echo "=== 開始安裝 sglang ==="
 
 # 2. 載入必要的編譯與 CUDA 模組
-echo "載入模組: nvhpc-hpcx-cuda12/24.7 與 gcc/12.5.0"
-module load nvhpc-hpcx-cuda12/24.7 || echo "警告: 無法載入 nvhpc 模組"
-module load gcc/12.5.0 || echo "警告: 無法載入 gcc 12.5.0 模組"
+echo "載入模組: cuda/12.6 與 gcc/12.2"
+module load cuda/12.6 || echo "警告: 無法載入 cuda/12.6 模組"
+module load gcc/12.2 || echo "警告: 無法載入 gcc/12.2 模組"
 
 # 設定 CUDA_HOME (deep_gemm 需要)
-export CUDA_HOME=/work/HPC_software/LMOD/nvidia/packages/hpc_sdk-24.7/Linux_x86_64/24.7/cuda/12.5
+export CUDA_HOME=/work/envstack/apps/cuda/12.6
 export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
@@ -52,13 +55,13 @@ echo ""
 echo "=== 使用說明 ==="
 echo "請執行以下指令來啟動環境與伺服器："
 echo "source $VENV_PATH/bin/activate"
-echo "module load nvhpc-hpcx-cuda12/24.7"
-echo "module load gcc/12.5.0"
+echo "module load cuda/12.6"
+echo "module load gcc/12.2"
 echo "export CC=gcc"
-echo "export CUDA_HOME=/work/HPC_software/LMOD/nvidia/packages/hpc_sdk-24.7/Linux_x86_64/24.7/cuda/12.5"
+echo "export CUDA_HOME=/work/envstack/apps/cuda/12.6"
 echo "export HF_HOME=$CACHE_DIR"
 echo "python -m sglang.launch_server \\"
-echo "    --model-path MiniMaxAI/MiniMax-M2.5 \\"
+echo "    --model-path MiniMaxAI/MiniMax-M2.7 \\"
 echo "    --tp-size 4 \\"
 echo "    --trust-remote-code \\"
 echo "    --tool-call-parser minimax-m2 \\"

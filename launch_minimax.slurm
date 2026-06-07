@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=sglang-minimax
-#SBATCH --partition=normal2
+#SBATCH --partition=8gpus
 #SBATCH --account=GOV113021
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=48
-#SBATCH --gpus-per-node=4
+#SBATCH --gres=gpu:H200:4
+#SBATCH --mem=800G
 #SBATCH --output=logs/minimax-%j.out
 #SBATCH --error=logs/minimax-%j.err
 
@@ -12,12 +13,13 @@
 mkdir -p logs
 
 # 載入必要的環境模組
-module load nvhpc-hpcx-cuda12/24.7
+module load cuda/12.6
+module load gcc/12.2
 export CC=gcc
 
 # 切換到專案目錄
-cd /work/$USER/antigravity/vllm
+cd /work/$USER/model/sglang_minmax
 
 # 執行 SGLang MiniMax 啟動腳本
-echo "Starting SGLang MiniMax-M2.5 Service on $(hostname)..."
-bash launch_minimax_sglang_singularity.sh
+echo "Starting SGLang MiniMax-M2.7 Service on $(hostname)..."
+bash launch_minimax.sh

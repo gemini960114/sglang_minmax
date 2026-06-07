@@ -1,0 +1,15 @@
+# Logs：保留目錄結構，忽略實際日誌檔案
+logs/*
+!logs/.gitkeep
+
+# Python 虛擬環境
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 暫存檔
+*.tmp
+*.bak
