@@ -30,6 +30,15 @@ source $HOME/.local/bin/env
 bash sglang_install.sh
 ```
 
+### 2.5 修補 Claude Code 相容性 (選用)
+
+如果您需要直接將 **Claude Code CLI** 對接至 SGLang 服務，請在安裝後執行此腳本來修補您虛擬環境中的套件：
+
+```bash
+source .venv/bin/activate
+python patch_claude_compatibility.py
+```
+
 ### 3. 啟動服務
 
 ```bash
@@ -204,6 +213,125 @@ SGLang 啟動 MiniMax-M2.7 共經歷以下階段：
 | **5. 就緒** | `The server is fired up and ready to roll!` | — |
 
 > **DeepGEMM cache**：首次啟動後 kernel 會快取於 `~/.cache/deepgemm/`，後續重啟此階段大幅縮短。
+
+---
+
+## 🤖 Claude Code 整合相容性
+
+本專案已適配 **Claude Code CLI (v2.1.154+)** 的直接連線。
+
+由於新版 Claude Code 在 `/v1/messages` 請求中帶有非標準角色（如 `ctx`, `system`, `msg`），會導致原生的 SGLang 拋出 `400 Pydantic Validation Error`。我們已對虛擬環境中的 SGLang 進行了熱修復，使其能夠順暢對接。
+
+### 1. 自動修補腳本
+
+若為新安裝環境，請在啟用虛擬環境後執行此腳本來修補 SGLang 套件：
+
+```bash
+source .venv/bin/activate
+python patch_claude_compatibility.py
+```
+
+<details>
+<summary><b>🔍 點此查看修補原理與程式碼變更 (Diffs)</b></summary>
+
+#### 檔案 1: 放寬 API 欄位驗證 (`protocol.py`)
+在 `.venv/lib/python3.11/site-packages/sglang/srt/entrypoints/anthropic/protocol.py` 中放寬 `AnthropicMessage` 結構中 `role` 欄位的限制，納入 `"system"`, `"ctx"`, `"msg"`：
+```diff
+class AnthropicMessage(BaseModel):
+    """Message structure"""
+
+-   role: Literal["user", "assistant"]
++   role: Literal["user", "assistant", "system", "ctx", "msg"]
+    content: str | list[AnthropicContentBlock]
+```
+
+#### 檔案 2: 適配轉換至 OpenAI 格式 (`serving.py`)
+在 `.venv/lib/python3.11/site-packages/sglang/srt/entrypoints/anthropic/serving.py` 中，將 `"system"` 與 `"ctx"` 映射至 OpenAI 的 `"system"`，並將其餘自訂角色映射至 `"user"`：
+```diff
+        # Convert messages
+        for msg in anthropic_request.messages:
++             role = msg.role
++             if role == "ctx":
++                 role = "system"
++             elif role not in ["user", "assistant", "system"]:
++                 role = "user"
++ 
+              if isinstance(msg.content, str):
+-                 openai_messages.append({"role": msg.role, "content": msg.content})
++                 openai_messages.append({"role": role, "content": msg.content})
+                  continue
+
+              # Complex content with blocks
+-             openai_msg = {"role": msg.role}
++             openai_msg = {"role": role}
+              content_parts = []
+              ...
+                      # Tool results from user become separate tool messages
+-                     if msg.role == "user":
++                     if role == "user":
+                          openai_messages.append(
+                              {
+                                  "role": "tool",
+                                  "tool_call_id": tool_call_id,
+                                  "content": tool_content,
+                              }
+                          )
+```
+</details>
+
+### 2. Claude Code 設定步驟與設定檔範本 (`~/.claude/settings.json`)
+
+請依照以下步驟設定您的 Claude Code：
+
+1. **建立/開啟設定檔**：在您本地的終端機執行編輯指令，開啟設定檔（若目錄或檔案不存在會自動建立）：
+   ```bash
+   mkdir -p ~/.claude
+   nano ~/.claude/settings.json
+   ```
+2. **複製貼入設定內容**：將下方提供的 JSON 範本完整複製並貼入檔案中。
+3. **動態更新計算節點**：
+   * 透過 `squeue -u $USER` 確認您目前正在運作的 Slurm Job 位於哪一個計算節點（例如：`25a-hgpn144`）。
+   * 將 JSON 中的 `"ANTHROPIC_BASE_URL"` 的 `<當前Slurm計算節點名稱>` 替換為該計算節點（例如將其改為 `"http://25a-hgpn144:8000"`）。
+4. **啟動 Claude Code**：存檔離開後，在終端機輸入 `claude` 啟動，即可開始與 SGLang 服務進行連線對話。
+
+#### 設定檔範本內容：
+
+```json
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "sk-local",
+    "ANTHROPIC_BASE_URL": "http://<當前Slurm計算節點名稱>:8000",
+    "ANTHROPIC_MODEL": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL_NAME": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL_NAME": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMaxAI/MiniMax-M2.7",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL_NAME": "MiniMaxAI/MiniMax-M2.7",
+    "CLAUDE_CODE_DISABLE_THINKING": "1",
+    "LITELLM_DROP_PARAMS": "true",
+    "ANTHROPIC_DISABLE_THINKING": "1",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "model": "opus",
+  "effortLevel": "max",
+  "promptSuggestionEnabled": false,
+  "plansDirectory": "./plans",
+  "prefersReducedMotion": true,
+  "theme": "dark",
+  "terminalProgressBarEnabled": false
+}
+```
+
+> [!NOTE]
+> * `ANTHROPIC_BASE_URL` 後方請**不要**加上 `/v1`。
+> * 如果 Slurm 工作重啟，請使用 `squeue -u c00cjz00` 確認新的計算節點，並更新 `ANTHROPIC_BASE_URL` 中的節點名稱。
 
 ---
 
