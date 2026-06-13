@@ -225,7 +225,9 @@ python test_concurrency.py --users 200 --max-tokens 1024 --timeout 600
 
 ## ⚙️ 啟動流程說明
 
-SGLang 啟動 MiniMax-M2.7 共經歷以下階段：
+SGLang 啟動模型共經歷以下階段：
+
+### 1. MiniMax-M2.7 (TP=4) 啟動流程
 
 | 階段 | 說明 | 預估時間 |
 |------|------|---------|
@@ -236,6 +238,16 @@ SGLang 啟動 MiniMax-M2.7 共經歷以下階段：
 | **5. 就緒** | `The server is fired up and ready to roll!` | — |
 
 > **DeepGEMM cache**：首次啟動後 kernel 會快取於 `~/.cache/deepgemm/`，後續重啟此階段大幅縮短。
+
+### 2. MiniMax-M3 (TP=8, EP=8) 啟動流程
+
+| 階段 | 說明 | 預估時間 |
+|------|------|---------|
+| 1. 模型載入 | 讀取 59 個 safetensors 權重分片 | ~6~7 min (約 397s) |
+| 2. NCCL/分散式通訊 | 8 個 TP/EP rank 建立通訊與初始化 | ~15s |
+| 3. KV Cache 分配 | 動態配置推論需要的 GPU 記憶體 | ~10s |
+| 4. CUDA Graph 擷取 | 擷取並優化 52 個 Batch Size 級距的運作圖 (Decode Capture) | ~4~5 min (約 271s) |
+| **5. 就緒** | 開始提供 API 服務，支援多模態與推論 | — |
 
 ---
 
