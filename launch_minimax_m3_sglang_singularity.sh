@@ -53,8 +53,8 @@ PATCH_BINDS=""
 PATCH_DIR="/work/c00cjz00/model/sglang_minmax/patched_anthropic"
 if [ -d "$PATCH_DIR" ]; then
     echo "[Info] 偵測到 Claude Code 修補檔，將自動進行 Bind Mount..."
-    # 針對 python3.12 安裝路徑進行 Bind
-    PATCH_BINDS="-B $PATCH_DIR/protocol.py:/usr/local/lib/python3.12/dist-packages/sglang/srt/entrypoints/anthropic/protocol.py -B $PATCH_DIR/serving.py:/usr/local/lib/python3.12/dist-packages/sglang/srt/entrypoints/anthropic/serving.py"
+    # 針對容器內實際的 /sgl-workspace/sglang/python/sglang 安裝路徑進行 Bind
+    PATCH_BINDS="-B $PATCH_DIR/protocol.py:/sgl-workspace/sglang/python/sglang/srt/entrypoints/anthropic/protocol.py -B $PATCH_DIR/serving.py:/sgl-workspace/sglang/python/sglang/srt/entrypoints/anthropic/serving.py"
 fi
 
 # 4. 執行 Singularity 容器
