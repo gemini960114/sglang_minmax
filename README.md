@@ -257,7 +257,7 @@ SGLang 啟動模型共經歷以下階段：
 
 由於新版 Claude Code 在 `/v1/messages` 請求中帶有非標準角色（如 `ctx`, `system`, `msg`），會導致原生的 SGLang 拋出 `400 Pydantic Validation Error`。我們已對虛擬環境中的 SGLang 進行了熱修復，使其能夠順暢對接。
 
-### 1. 自動修補腳本
+### 1. 本地虛擬環境修補
 
 若為新安裝環境，請在啟用虛擬環境後執行此腳本來修補 SGLang 套件：
 
@@ -265,6 +265,14 @@ SGLang 啟動模型共經歷以下階段：
 source .venv/bin/activate
 python patch_claude_compatibility.py
 ```
+
+### 1.5 Singularity 容器環境修補 (Bind Mount)
+
+由於 Singularity 鏡像（SIF 檔案）為唯讀狀態，無法直接在容器內執行修補腳本。本專案透過 `Bind Mount` 機制實現容器內修補：
+
+1. **生成修補檔**：當您在主機端啟用虛擬環境並執行 `python patch_claude_compatibility.py` 後，腳本除了修補本機套件，還會自動將修補後的 `protocol.py` 與 `serving.py` 輸出到 `patched_anthropic/` 目錄中。
+2. **自動掛載**：Singularity 啟動腳本（如 `launch_minimax_m3_sglang_singularity.sh`）會自動偵測 `patched_anthropic/` 目錄是否存在，若存在則會自動在啟動容器時進行掛載（Bind Mount），覆蓋容器內部的 Anthropic API 協定程式碼，使其支援 Claude Code。
+
 
 <details>
 <summary><b>🔍 點此查看修補原理與程式碼變更 (Diffs)</b></summary>
