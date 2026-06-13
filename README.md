@@ -74,6 +74,16 @@ mkdir -p /work/$(whoami)/containers/
 singularity pull --force /work/$(whoami)/containers/sglang-dev.sif docker://lmsysorg/sglang:dev-cu13-minimax-m3
 ```
 
+### 1.5 下載模型權重 (建議於登入節點執行)
+
+由於計算節點通常無法連外網，請在登入節點先下載模型權重至快取目錄：
+
+```bash
+export HF_HOME="/work/$(whoami)/huggingface_cache"
+hf download MiniMaxAI/MiniMax-M3-MXFP8
+```
+
+
 ### 2. 啟動服務
 
 ```bash
