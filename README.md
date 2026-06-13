@@ -84,8 +84,8 @@ export HF_HOME="/work/$(whoami)/huggingface_cache"
 # 下載 MiniMax-M2.7
 hf download MiniMaxAI/MiniMax-M2.7
 
-# 下載 MiniMax-M3-MXFP8 (FP8 版本)
-hf download MiniMaxAI/MiniMax-M3-MXFP8
+# 下載 MiniMax-M3 (BF16 原版)
+hf download MiniMaxAI/MiniMax-M3
 ```
 
 
