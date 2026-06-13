@@ -80,6 +80,11 @@ singularity pull --force /work/$(whoami)/containers/sglang-dev.sif docker://lmsy
 
 ```bash
 export HF_HOME="/work/$(whoami)/huggingface_cache"
+
+# 下載 MiniMax-M2.7
+hf download MiniMaxAI/MiniMax-M2.7
+
+# 下載 MiniMax-M3-MXFP8 (FP8 版本)
 hf download MiniMaxAI/MiniMax-M3-MXFP8
 ```
 
