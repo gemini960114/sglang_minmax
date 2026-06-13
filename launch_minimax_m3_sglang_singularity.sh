@@ -48,8 +48,17 @@ else
     echo "偵測到可用 GPU 數量: $TP_SIZE (設定 --tp-size $TP_SIZE)"
 fi
 
-# 3. 執行 Singularity 容器
-echo "[3/3] 正在啟動 SGLang (MiniMax-M3) Singularity 容器..."
+# 3. 檢查並載入 Claude Code 相容性修補檔 (Bind Mount)
+PATCH_BINDS=""
+PATCH_DIR="/work/c00cjz00/model/sglang_minmax/patched_anthropic"
+if [ -d "$PATCH_DIR" ]; then
+    echo "[Info] 偵測到 Claude Code 修補檔，將自動進行 Bind Mount..."
+    # 針對 python3.12 安裝路徑進行 Bind
+    PATCH_BINDS="-B $PATCH_DIR/protocol.py:/usr/local/lib/python3.12/dist-packages/sglang/srt/entrypoints/anthropic/protocol.py -B $PATCH_DIR/serving.py:/usr/local/lib/python3.12/dist-packages/sglang/srt/entrypoints/anthropic/serving.py"
+fi
+
+# 4. 執行 Singularity 容器
+echo "[4/4] 正在啟動 SGLang (MiniMax-M3) Singularity 容器..."
 echo "模型: $MODEL_PATH"
 echo "鏡像: $IMAGE_PATH"
 echo "URL: http://0.0.0.0:8000"
@@ -59,7 +68,7 @@ echo "      首次啟動含 DeepGEMM warmup，約需 5~15 分鐘。"
 echo ""
 
 # 使用 singularity exec 執行 sglang
-singularity exec --nv -B /work "$IMAGE_PATH" \
+singularity exec --nv -B /work $PATCH_BINDS "$IMAGE_PATH" \
     sglang serve \
     --model-path "$MODEL_PATH" \
     --host 0.0.0.0 \
