@@ -90,5 +90,17 @@ def patch_sglang():
     else:
         print("[!] 找不到目標特徵，可能 sglang 版本不同。請手動確認。")
 
+    # 同步修補檔至 Singularity 掛載目錄
+    import shutil
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    patched_dir = os.path.join(project_dir, "patched_anthropic")
+    try:
+        os.makedirs(patched_dir, exist_ok=True)
+        shutil.copy2(protocol_path, os.path.join(patched_dir, "protocol.py"))
+        shutil.copy2(serving_path, os.path.join(patched_dir, "serving.py"))
+        print(f"[✓] 已同步修補檔至 Singularity 掛載目錄: {patched_dir}")
+    except Exception as e:
+        print(f"[!] 無法同步修補檔至 Singularity 目錄: {e}")
+
 if __name__ == "__main__":
     patch_sglang()
